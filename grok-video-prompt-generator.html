@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grok Video Prompt Generator Pro v1.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/google-translate-api-free@1.1.1/lib/index.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-color: #e8e8e8;
+            --accent-color: #ff6b35;
+            --accent-hover: #ff8555;
+            --danger-color: #ef476f;
+            --border-color: #333;
+            --input-bg: #1a1a1a;
+            --success-color: #06d6a0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 15px;
+        }
+
+        h1 { 
+            margin: 0; 
+            color: var(--accent-color); 
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 10px;
+        }
+
+        .section-header h3 { 
+            margin: 0; 
+            font-size: 1.1em;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary { 
+            background: var(--accent-color); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: var(--accent-hover); 
+            transform: translateY(-2px);
+        }
+
+        .btn-outline { 
+            background: transparent; 
+            border: 1px solid var(--accent-color); 
+            color: var(--accent-color); 
+        }
+        .btn-outline:hover { 
+            background: var(--accent-color); 
+            color: white; 
+        }
+
+        .btn-danger { 
+            background: var(--danger-color); 
+            color: white; 
+        }
+
+        .btn-sm { 
+            padding: 4px 8px; 
+            font-size: 12px; 
+        }
+
+        .option-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 110px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .option-btn .jp { 
+            font-weight: bold; 
+            font-size: 14px; 
+        }
+        .option-btn .en { 
+            font-size: 11px; 
+            opacity: 0.6; 
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        input, textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 6px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus { 
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(255, 107, 53, 0.2);
+        }
+
+        .output-area {
+            width: 100%;
+            height: 180px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: rgba(255, 107, 53, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-color);
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 20px;
+            display: none;
+            z-index: 100;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .info-box {
+            background: rgba(255, 107, 53, 0.1);
+            border-left: 3px solid var(--accent-color);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .slider-group {
+            margin-bottom: 15px;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .slider-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: var(--border-color);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            cursor: pointer;
+            border: none;
+        }
+
+        .duration-display {
+            background: var(--input-bg);
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            min-width: 60px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .aspect-ratio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .aspect-btn {
+            padding: 8px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .aspect-btn:hover {
+            border-color: var(--accent-color);
+        }
+
+        .aspect-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .resolution-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .resolution-btn {
+            flex: 1;
+            padding: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .resolution-btn:hover {
+            border-color: var(--accent-color);
+        }
+
+        .resolution-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .layer-section {
+            background: rgba(255, 107, 53, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+
+        .layer-label {
+            font-weight: bold;
+            color: var(--accent-color);
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .set-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .set-btn-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎬 Grok Video Prompt Generator Pro</h1>
+        <div class="subtitle">Grok (grok-imagine-video) の動画生成に最適化されたプロンプトビルダー v1.0</div>
+    </header>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>ℹ️ Grok動画プロンプトについて</h3>
+        </div>
+
+        <div class="info-box">
+            💡 <strong>ヒント:</strong> Grok動画は5つのレイヤー（シーン、カメラ、スタイル、モーション、オーディオ）で構成されます。詳細なプロンプトほど高い制御性が得られます。APIパラメータ（秒数、アスペクト比、解像度）は別途指定してください。
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>🎯 プロンプト構築（5つのレイヤー）</h3>
+        </div>
+
+        <div class="layer-section">
+            <div class="layer-label">1️⃣ シーン（Scene）- 何が起こっているか</div>
+            <textarea id="scene" placeholder="例：宇宙船内での会話、火星からのロケット発射、古い建物の探索..." style="width: 100%; height: 60px;" oninput="updateOutput()"></textarea>
+            <div style="font-size: 0.85em; color: #999; margin-top: 5px;">💬 日本語で入力すると自動的に英語に変換されます</div>
+        </div>
+
+        <div class="layer-section">
+            <div class="layer-label">2️⃣ カメラ（Camera）- どのように撮影されているか</div>
+            <div class="option-grid" id="cameraOptions"></div>
+        </div>
+
+        <div class="layer-section">
+            <div class="layer-label">3️⃣ スタイル/ライティング（Style/Lighting）</div>
+            <div class="option-grid" id="styleOptions"></div>
+        </div>
+
+        <div class="layer-section">
+            <div class="layer-label">4️⃣ モーション（Motion）- どのように動くか</div>
+            <textarea id="motion" placeholder="例：ゆっくりカメラがズームイン、キャラが回転、風が衣服を揺らす..." style="width: 100%; height: 60px;" oninput="updateOutput()"></textarea>
+            <div style="font-size: 0.85em; color: #999; margin-top: 5px;">💬 日本語で入力すると自動的に英語に変換されます</div>
+        </div>
+
+        <div class="layer-section">
+            <div class="layer-label">5️⃣ オーディオ（Audio）- 何が聞こえるか</div>
+            <textarea id="audio" placeholder="例：He says calmly: 'Let me explain...' | Audio: quiet engine hum, no music" style="width: 100%; height: 60px;" oninput="updateOutput()"></textarea>
+            <div style="font-size: 0.85em; color: #999; margin-top: 5px;">💬 日本語で入力すると自動的に英語に変換されます</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>📝 セット管理</h3>
+        </div>
+        <div class="form-group">
+            <input id="setName" placeholder="セット名を入力（例：SF_会話シーン）" style="flex: 1;">
+            <button class="btn btn-primary" onclick="saveSet()">現在の選択を保存</button>
+        </div>
+        <div id="setList" class="set-list"></div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>📤 プロンプト出力</h3>
+        </div>
+
+        <div class="controls" style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;">
+            <button class="btn btn-primary" onclick="copyToClipboard()">プロンプトをコピー</button>
+            <button class="btn btn-outline btn-sm" onclick="clearSelection()" style="margin-left: auto;">リセット</button>
+        </div>
+
+        <textarea id="output" class="output-area" placeholder="ここに最終プロンプトが生成されます。直接編集も可能です。"></textarea>
+
+        <div class="stats">
+            <div class="stat-item">
+                📊 文字数: <span id="charCount">0</span>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>💾 データ管理</h3>
+        </div>
+        <div class="controls">
+            <button class="btn btn-outline" onclick="exportData()">JSONをエクスポート</button>
+            <label class="btn btn-outline" style="cursor: pointer;">
+                JSONをインポート
+                <input type="file" style="display: none;" onchange="importData(event)">
+            </label>
+            <button class="btn btn-danger" onclick="resetToDefault()">初期状態に戻す</button>
+        </div>
+    </div>
+</div>
+
+<div id="copyToast" class="copy-toast">✓ プロンプトをコピーしました！</div>
+
+<script>
+    const CAMERA_OPTIONS = [
+        {jp:"クローズアップ", en:"close-up", v:"close-up"},
+        {jp:"ミディアムショット", en:"medium shot", v:"medium shot"},
+        {jp:"ワイドショット", en:"wide shot", v:"wide shot"},
+        {jp:"肩越し", en:"over-the-shoulder", v:"over-the-shoulder"},
+        {jp:"空撮", en:"aerial", v:"aerial"},
+        {jp:"POV視点", en:"POV", v:"POV"},
+        {jp:"ハンドヘルド", en:"handheld shaky", v:"handheld shaky camera"},
+        {jp:"ゆっくりドリーイン", en:"slow dolly in", v:"slow dolly in"},
+        {jp:"トラッキング", en:"tracking shot", v:"tracking shot"},
+        {jp:"ドローン飛行", en:"drone fly-through", v:"drone fly-through"},
+        {jp:"固定カメラ", en:"static tripod", v:"static tripod"},
+        {jp:"高速ズーム", en:"fast zoom", v:"fast zoom"}
+    ];
+
+    const STYLE_OPTIONS = [
+        {jp:"シネマティック", en:"cinematic lighting", v:"cinematic lighting"},
+        {jp:"深い黒", en:"rich blacks", v:"rich blacks"},
+        {jp:"暖色調", en:"warm tones", v:"warm tones"},
+        {jp:"冷色調", en:"cool tones", v:"cool tones"},
+        {jp:"高コントラスト", en:"high contrast", v:"high contrast"},
+        {jp:"浅い被写界深度", en:"shallow depth of field", v:"shallow depth of field"},
+        {jp:"モーションブラー", en:"motion blur", v:"motion blur"},
+        {jp:"高速シャッター", en:"high shutter speed", v:"high shutter speed"},
+        {jp:"フィルムグレイン", en:"film grain", v:"film grain"},
+        {jp:"アナモルフィック", en:"anamorphic look", v:"anamorphic look"},
+        {jp:"ライブアクション", en:"live-action", v:"live-action"},
+        {jp:"高品質", en:"high quality", v:"high quality"}
+    ];
+
+    let selectedCamera = new Set();
+    let selectedStyle = new Set();
+    let translationCache = {};
+
+    // 簡易翻訳関数（日本語を含むかチェック）
+    function containsJapanese(text) {
+        return /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FFF]/.test(text);
+    }
+
+    // Google Translate APIを使用した翻訳
+    async function translateToEnglish(text) {
+        if (!text || !containsJapanese(text)) {
+            return text;
+        }
+
+        // キャッシュをチェック
+        if (translationCache[text]) {
+            return translationCache[text];
+        }
+
+        try {
+            // Google Translate APIの無料エンドポイント
+            const response = await fetch(
+                `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=ja|en`
+            );
+            const data = await response.json();
+            
+            if (data.responseStatus === 200) {
+                const translated = data.responseData.translatedText;
+                translationCache[text] = translated;
+                return translated;
+            }
+        } catch (error) {
+            console.log('翻訳エラー:', error);
+        }
+        
+        return text; // 翻訳失敗時は元のテキストを返す
+    }
+
+    function init() {
+        loadFromLocalStorage();
+        renderCameraOptions();
+        renderStyleOptions();
+        renderSetList();
+        updateOutput();
+    }
+
+    function renderCameraOptions() {
+        const container = document.getElementById('cameraOptions');
+        container.innerHTML = '';
+        CAMERA_OPTIONS.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn' + (selectedCamera.has(item.v) ? ' active' : '');
+            btn.innerHTML = `<div class="jp">${item.jp}</div><div class="en">${item.en}</div>`;
+            btn.onclick = () => toggleOption(selectedCamera, item.v, btn, 'cameraOptions');
+            container.appendChild(btn);
+        });
+    }
+
+    function renderStyleOptions() {
+        const container = document.getElementById('styleOptions');
+        container.innerHTML = '';
+        STYLE_OPTIONS.forEach(item => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn' + (selectedStyle.has(item.v) ? ' active' : '');
+            btn.innerHTML = `<div class="jp">${item.jp}</div><div class="en">${item.en}</div>`;
+            btn.onclick = () => toggleOption(selectedStyle, item.v, btn, 'styleOptions');
+            container.appendChild(btn);
+        });
+    }
+
+    async function toggleOption(set, value, btn, containerId) {
+        if (set.has(value)) {
+            set.delete(value);
+            btn.classList.remove('active');
+        } else {
+            set.add(value);
+            btn.classList.add('active');
+        }
+        await updateOutput();
+        saveToLocalStorage();
+    }
+
+
+
+    async function updateOutput() {
+        const scene = document.getElementById('scene').value.trim();
+        const motion = document.getElementById('motion').value.trim();
+        const audio = document.getElementById('audio').value.trim();
+        
+        // 日本語を英語に翻訳
+        const sceneEn = await translateToEnglish(scene);
+        const motionEn = await translateToEnglish(motion);
+        const audioEn = await translateToEnglish(audio);
+        
+        let camera = Array.from(selectedCamera).join(", ");
+        let style = Array.from(selectedStyle).join(", ");
+
+        let prompt = [];
+        if (sceneEn) prompt.push(sceneEn);
+        if (camera) prompt.push(camera);
+        if (style) prompt.push(style);
+        if (motionEn) prompt.push(motionEn);
+        if (audioEn) prompt.push(audioEn);
+
+        const fullPrompt = prompt.join(". ");
+        document.getElementById('output').value = fullPrompt;
+        document.getElementById('charCount').textContent = fullPrompt.length;
+    }
+
+    async function clearSelection() {
+        selectedCamera.clear();
+        selectedStyle.clear();
+        document.getElementById('scene').value = '';
+        document.getElementById('motion').value = '';
+        document.getElementById('audio').value = '';
+        renderCameraOptions();
+        renderStyleOptions();
+        await updateOutput();
+        saveToLocalStorage();
+    }
+
+    function saveSet() {
+        const setName = document.getElementById('setName').value.trim();
+        if (!setName) {
+            alert('セット名を入力してください');
+            return;
+        }
+
+        const sets = JSON.parse(localStorage.getItem('grok_video_sets')) || {};
+        sets[setName] = {
+            scene: document.getElementById('scene').value,
+            camera: Array.from(selectedCamera),
+            style: Array.from(selectedStyle),
+            motion: document.getElementById('motion').value,
+            audio: document.getElementById('audio').value
+        };
+        localStorage.setItem('grok_video_sets', JSON.stringify(sets));
+        document.getElementById('setName').value = '';
+        renderSetList();
+    }
+
+    async function loadSet(setName) {
+        const sets = JSON.parse(localStorage.getItem('grok_video_sets')) || {};
+        const set = sets[setName];
+        if (set) {
+            document.getElementById('scene').value = set.scene;
+            document.getElementById('motion').value = set.motion;
+            document.getElementById('audio').value = set.audio;
+            selectedCamera = new Set(set.camera);
+            selectedStyle = new Set(set.style);
+            renderCameraOptions();
+            renderStyleOptions();
+            await updateOutput();
+        }
+    }
+
+    function deleteSet(setName) {
+        const sets = JSON.parse(localStorage.getItem('grok_video_sets')) || {};
+        delete sets[setName];
+        localStorage.setItem('grok_video_sets', JSON.stringify(sets));
+        renderSetList();
+    }
+
+    function renderSetList() {
+        const container = document.getElementById('setList');
+        container.innerHTML = '';
+        const sets = JSON.parse(localStorage.getItem('grok_video_sets')) || {};
+
+        Object.keys(sets).forEach(setName => {
+            const div = document.createElement('div');
+            div.className = 'set-btn-container';
+            div.innerHTML = `
+                <button class="btn btn-outline btn-sm" onclick="loadSet('${setName}')">${setName}</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteSet('${setName}')">削除</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function copyToClipboard() {
+        const output = document.getElementById('output');
+        output.select();
+        document.execCommand('copy');
+        
+        const toast = document.getElementById('copyToast');
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2000);
+    }
+
+    function exportData() {
+        const data = {
+            scene: document.getElementById('scene').value,
+            camera: Array.from(selectedCamera),
+            style: Array.from(selectedStyle),
+            motion: document.getElementById('motion').value,
+            audio: document.getElementById('audio').value,
+            sets: JSON.parse(localStorage.getItem('grok_video_sets')) || {}
+        };
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'grok-video-prompt-data.json';
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                document.getElementById('scene').value = data.scene || '';
+                document.getElementById('motion').value = data.motion || '';
+                document.getElementById('audio').value = data.audio || '';
+                selectedCamera = new Set(data.camera || []);
+                selectedStyle = new Set(data.style || []);
+                selectedDuration = data.duration || 6;
+                selectedAspectRatio = data.aspectRatio || '16:9';
+                selectedResolution = data.resolution || '720p';
+                
+                if (data.sets) {
+                    localStorage.setItem('grok_video_sets', JSON.stringify(data.sets));
+                }
+                renderCameraOptions();
+                renderStyleOptions();
+                renderSetList();
+                updateOutput();
+                updateProcessingTime();
+                saveToLocalStorage();
+            } catch (err) {
+                alert('ファイルの読み込みに失敗しました');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    async function resetToDefault() {
+        if (confirm('本当に初期状態に戻しますか？')) {
+            localStorage.removeItem('grok_video_data');
+            localStorage.removeItem('grok_video_sets');
+            await clearSelection();
+        }
+    }
+
+    function saveToLocalStorage() {
+        const data = {
+            scene: document.getElementById('scene').value,
+            camera: Array.from(selectedCamera),
+            style: Array.from(selectedStyle),
+            motion: document.getElementById('motion').value,
+            audio: document.getElementById('audio').value,
+            duration: selectedDuration,
+            aspectRatio: selectedAspectRatio,
+            resolution: selectedResolution
+        };
+        localStorage.setItem('grok_video_data', JSON.stringify(data));
+    }
+
+    function loadFromLocalStorage() {
+        const data = JSON.parse(localStorage.getItem('grok_video_data'));
+        if (data) {
+            document.getElementById('scene').value = data.scene || '';
+            document.getElementById('motion').value = data.motion || '';
+            document.getElementById('audio').value = data.audio || '';
+            selectedCamera = new Set(data.camera || []);
+            selectedStyle = new Set(data.style || []);
+        }
+    }
+
+    // 自動保存
+    document.getElementById('scene').addEventListener('input', () => {
+        updateOutput();
+        saveToLocalStorage();
+    });
+    document.getElementById('motion').addEventListener('input', () => {
+        updateOutput();
+        saveToLocalStorage();
+    });
+    document.getElementById('audio').addEventListener('input', () => {
+        updateOutput();
+        saveToLocalStorage();
+    });
+
+    // 初期化
+    init();
+</script>
+
+</body>
+</html>
