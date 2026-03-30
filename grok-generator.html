@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grok Prompt Generator Pro v1.0</title>
+    <style>
+        :root {
+            --bg-color: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text-color: #e8e8e8;
+            --accent-color: #ff6b35;
+            --accent-hover: #ff8555;
+            --danger-color: #ef476f;
+            --border-color: #333;
+            --input-bg: #1a1a1a;
+            --success-color: #06d6a0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 15px;
+        }
+
+        h1 { 
+            margin: 0; 
+            color: var(--accent-color); 
+            font-size: 2em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #999;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            border: 1px solid var(--border-color);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 10px;
+        }
+
+        .section-header h3 { 
+            margin: 0; 
+            font-size: 1.1em;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary { 
+            background: var(--accent-color); 
+            color: white; 
+        }
+        .btn-primary:hover { 
+            background: var(--accent-hover); 
+            transform: translateY(-2px);
+        }
+
+        .btn-outline { 
+            background: transparent; 
+            border: 1px solid var(--accent-color); 
+            color: var(--accent-color); 
+        }
+        .btn-outline:hover { 
+            background: var(--accent-color); 
+            color: white; 
+        }
+
+        .btn-danger { 
+            background: var(--danger-color); 
+            color: white; 
+        }
+        .btn-danger:hover {
+            background: #ff5a7e;
+        }
+
+        .btn-sm { 
+            padding: 4px 8px; 
+            font-size: 12px; 
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: #000;
+        }
+        .btn-success:hover {
+            background: #08e5b0;
+        }
+
+        .option-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .option-btn {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            cursor: pointer;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            min-width: 110px;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .option-btn:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+        }
+
+        .option-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .option-btn .jp { 
+            font-weight: bold; 
+            font-size: 14px; 
+        }
+        .option-btn .en { 
+            font-size: 11px; 
+            opacity: 0.6; 
+        }
+
+        .delete-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger-color);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: 12px;
+            z-index: 10;
+        }
+
+        .editing .delete-badge { 
+            display: flex; 
+        }
+
+        .edit-form {
+            display: none;
+            background: rgba(255, 107, 53, 0.05);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border: 1px dashed var(--accent-color);
+        }
+
+        .edit-form.active { 
+            display: block; 
+        }
+
+        .form-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        input, textarea {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 10px;
+            border-radius: 6px;
+            outline: none;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus { 
+            border-color: var(--accent-color);
+            box-shadow: 0 0 8px rgba(255, 107, 53, 0.2);
+        }
+
+        .output-area {
+            width: 100%;
+            height: 140px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            background: rgba(255, 107, 53, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .set-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .set-btn-container {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: #333;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .copy-toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-color);
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 20px;
+            display: none;
+            z-index: 100;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .info-box {
+            background: rgba(255, 107, 53, 0.1);
+            border-left: 3px solid var(--accent-color);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #ccc;
+        }
+
+        .aspect-ratio-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .aspect-btn {
+            padding: 8px 12px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+
+        .aspect-btn:hover {
+            border-color: var(--accent-color);
+        }
+
+        .aspect-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .resolution-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .resolution-btn {
+            flex: 1;
+            padding: 10px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .resolution-btn:hover {
+            border-color: var(--accent-color);
+        }
+
+        .resolution-btn.active {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #999;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎨 Grok Prompt Generator Pro</h1>
+        <div class="subtitle">Grok (Aurora) の画像生成に最適化されたプロンプトビルダー v1.0</div>
+    </header>
+
+    <div id="categories-container"></div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>⚙️ 画像設定</h3>
+        </div>
+
+        <div class="info-box">
+            💡 <strong>ヒント:</strong> Grokのプロンプトは1～3文の短めの文章が最適です。詳細すぎるプロンプトより、明確で簡潔な表現が効果的です。
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">アスペクト比</label>
+            <div class="aspect-ratio-grid">
+                <button class="aspect-btn active" data-ratio="1:1" onclick="setAspectRatio('1:1')">1:1 (正方形)</button>
+                <button class="aspect-btn" data-ratio="16:9" onclick="setAspectRatio('16:9')">16:9 (横)</button>
+                <button class="aspect-btn" data-ratio="9:16" onclick="setAspectRatio('9:16')">9:16 (縦)</button>
+                <button class="aspect-btn" data-ratio="3:2" onclick="setAspectRatio('3:2')">3:2 (写真)</button>
+                <button class="aspect-btn" data-ratio="2:3" onclick="setAspectRatio('2:3')">2:3 (ポートレート)</button>
+                <button class="aspect-btn" data-ratio="4:3" onclick="setAspectRatio('4:3')">4:3 (プレゼン)</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: bold;">解像度</label>
+            <div class="resolution-group">
+                <button class="resolution-btn active" onclick="setResolution('1k')">1k (標準)</button>
+                <button class="resolution-btn" onclick="setResolution('2k')">2k (高解像度)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>📝 セット管理</h3>
+        </div>
+        <div class="form-group">
+            <input id="setName" placeholder="セット名を入力（例：ポートレート_自然光）" style="flex: 1;">
+            <button class="btn btn-primary" onclick="saveSet()">現在の選択を保存</button>
+        </div>
+        <div id="setList" class="set-list"></div>
+    </div>
+
+    <div class="card" id="param-card">
+        <div class="section-header">
+            <h3>🎯 プロンプト & 出力</h3>
+            <button class="btn btn-outline btn-sm" onclick="toggleParamEditMode()">スタイルプリセット編集</button>
+        </div>
+
+        <div class="form-group">
+            <input id="stylePrefix" style="width: 100%;" placeholder="例: photorealistic, oil painting, anime, watercolor" oninput="updateOutput()">
+        </div>
+        <div id="param-presets" class="controls">
+            <!-- スタイルプリセットボタンがここに生成されます -->
+        </div>
+        <div id="param-edit-form" class="edit-form">
+            <div class="form-group">
+                <input id="new-param-val" placeholder="スタイル (例: cinematic, ultra realistic, studio lighting) Enterで追加" style="flex:1" onkeydown="if(event.key==='Enter') addParamPreset()">
+                <button class="btn btn-primary" onclick="addParamPreset()">追加</button>
+            </div>
+        </div>
+
+        <div class="controls" style="margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+            <button class="btn btn-danger btn-sm" onclick="clearSelection()">リセット</button>
+            <div style="margin-left: auto;">
+                <button class="btn btn-primary" onclick="copyToClipboard()">プロンプトをコピー</button>
+            </div>
+        </div>
+
+        <textarea id="output" class="output-area" placeholder="ここにプロンプトが生成されます。直接編集も可能です。"></textarea>
+
+        <div class="stats">
+            <div class="stat-item">
+                📊 文字数: <span id="charCount">0</span>
+            </div>
+            <div class="stat-item">
+                ✅ 選択項目: <span id="selectedCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-header">
+            <h3>💾 データ管理</h3>
+        </div>
+        <div class="controls">
+            <button class="btn btn-outline" onclick="exportData()">JSONをエクスポート</button>
+            <label class="btn btn-outline" style="cursor: pointer;">
+                JSONをインポート
+                <input type="file" style="display: none;" onchange="importData(event)">
+            </label>
+            <button class="btn btn-danger" onclick="resetToDefault()">初期状態に戻す</button>
+        </div>
+    </div>
+</div>
+
+<div id="copyToast" class="copy-toast">✓ プロンプトをコピーしました！</div>
+
+<script>
+    // Grok用カテゴリー（写真、風景、人物などの一般的なカテゴリー）
+    const categoryOrder = ["主体", "シーン", "ライティング", "色彩", "構図", "テクスチャ"];
+    
+    const defaultCategories = {
+        "主体": [
+            {jp:"人物", en:"portrait", v:"portrait"},
+            {jp:"風景", en:"landscape", v:"landscape"},
+            {jp:"建築", en:"architecture", v:"architecture"},
+            {jp:"動物", en:"animal", v:"animal"},
+            {jp:"静物", en:"still life", v:"still life"},
+            {jp:"抽象", en:"abstract", v:"abstract"}
+        ],
+        "シーン": [
+            {jp:"屋外", en:"outdoor", v:"outdoor"},
+            {jp:"屋内", en:"indoor", v:"indoor"},
+            {jp:"都市", en:"urban", v:"urban"},
+            {jp:"自然", en:"nature", v:"nature"},
+            {jp:"スタジオ", en:"studio", v:"studio"},
+            {jp:"夜間", en:"night", v:"night"}
+        ],
+        "ライティング": [
+            {jp:"自然光", en:"natural light", v:"natural light"},
+            {jp:"ゴールデンアワー", en:"golden hour", v:"golden hour lighting"},
+            {jp:"スタジオライト", en:"studio lighting", v:"studio lighting"},
+            {jp:"ドラマティック", en:"dramatic", v:"dramatic lighting"},
+            {jp:"逆光", en:"backlighting", v:"backlighting"},
+            {jp:"柔らかい光", en:"soft light", v:"soft diffused light"}
+        ],
+        "色彩": [
+            {jp:"暖色調", en:"warm tones", v:"warm tones"},
+            {jp:"冷色調", en:"cool tones", v:"cool tones"},
+            {jp:"ビビッド", en:"vibrant", v:"vibrant colors"},
+            {jp:"パステル", en:"pastel", v:"pastel colors"},
+            {jp:"モノクロ", en:"monochrome", v:"monochrome"},
+            {jp:"高彩度", en:"saturated", v:"highly saturated"}
+        ],
+        "構図": [
+            {jp:"クローズアップ", en:"close-up", v:"close-up"},
+            {jp:"ワイドショット", en:"wide shot", v:"wide shot"},
+            {jp:"三分割構図", en:"rule of thirds", v:"rule of thirds"},
+            {jp:"中央構図", en:"centered", v:"centered composition"},
+            {jp:"低いアングル", en:"low angle", v:"low angle shot"},
+            {jp:"俯瞰", en:"overhead", v:"overhead view"}
+        ],
+        "テクスチャ": [
+            {jp:"フォトリアル", en:"photorealistic", v:"photorealistic"},
+            {jp:"油絵", en:"oil painting", v:"oil painting"},
+            {jp:"鉛筆スケッチ", en:"pencil sketch", v:"pencil sketch"},
+            {jp:"水彩画", en:"watercolor", v:"watercolor"},
+            {jp:"デジタルアート", en:"digital art", v:"digital art"},
+            {jp:"3DCG", en:"3D render", v:"3D render"}
+        ]
+    };
+
+    const defaultStyles = [
+        "photorealistic",
+        "cinematic",
+        "studio lighting",
+        "ultra realistic",
+        "high quality",
+        "detailed",
+        "sharp focus",
+        "professional",
+        "artistic",
+        "oil painting",
+        "watercolor",
+        "pencil sketch",
+        "anime",
+        "illustration"
+    ];
+
+    let categories = JSON.parse(localStorage.getItem('grok_categories')) || defaultCategories;
+    let sets = JSON.parse(localStorage.getItem('grok_sets')) || {};
+    let stylePresets = JSON.parse(localStorage.getItem('grok_styles')) || defaultStyles;
+    let selected = new Set();
+    let selectedStyle = "";
+    let selectedAspectRatio = "1:1";
+    let selectedResolution = "1k";
+
+    function ensureDataIntegrity() {
+        categoryOrder.forEach(cat => {
+            if (!categories[cat]) {
+                categories[cat] = JSON.parse(JSON.stringify(defaultCategories[cat] || []));
+            }
+        });
+        saveToLocalStorage();
+    }
+
+    function init() {
+        ensureDataIntegrity();
+        renderCategories();
+        renderSetList();
+        renderParamPresets();
+        updateOutput();
+    }
+
+    function renderCategories() {
+        const container = document.getElementById('categories-container');
+        container.innerHTML = '';
+
+        categoryOrder.forEach(catName => {
+            if (!categories[catName]) return;
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.id = `cat-${catName}`;
+
+            const header = document.createElement('div');
+            header.className = 'section-header';
+            header.innerHTML = `
+                <h3>${catName}</h3>
+                <button class="btn btn-outline btn-sm" onclick="toggleEditMode('${catName}')">編集</button>
+            `;
+
+            const grid = document.createElement('div');
+            grid.className = 'option-grid';
+            grid.id = `grid-${catName}`;
+
+            categories[catName].forEach((item, index) => {
+                const btn = createOptionBtn(catName, item, index);
+                grid.appendChild(btn);
+            });
+
+            const editForm = document.createElement('div');
+            editForm.className = 'edit-form';
+            editForm.id = `edit-${catName}`;
+            editForm.innerHTML = `
+                <div class="form-group">
+                    <input placeholder="日本語" class="jp-input" style="flex:1">
+                    <input placeholder="英語" class="en-input" style="flex:1">
+                    <button class="btn btn-primary" onclick="addItem('${catName}')">追加</button>
+                </div>
+            `;
+
+            card.appendChild(header);
+            card.appendChild(grid);
+            card.appendChild(editForm);
+            container.appendChild(card);
+        });
+    }
+
+    function createOptionBtn(catName, item, index) {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `
+            <div class="jp">${item.jp}</div>
+            <div class="en">${item.en}</div>
+            <div class="delete-badge">×</div>
+        `;
+
+        btn.onclick = (e) => {
+            if (e.target.closest('.delete-badge')) {
+                deleteItem(catName, index);
+            } else {
+                toggleOption(btn, item.v);
+            }
+        };
+
+        if (selected.has(item.v)) {
+            btn.classList.add('active');
+        }
+
+        return btn;
+    }
+
+    function toggleOption(btn, value) {
+        btn.classList.toggle('active');
+        if (selected.has(value)) {
+            selected.delete(value);
+        } else {
+            selected.add(value);
+        }
+        updateOutput();
+        saveToLocalStorage();
+    }
+
+    function toggleEditMode(catName) {
+        const card = document.getElementById(`cat-${catName}`);
+        card.classList.toggle('editing');
+        const editForm = document.getElementById(`edit-${catName}`);
+        editForm.classList.toggle('active');
+    }
+
+    function addItem(catName) {
+        const editForm = document.getElementById(`edit-${catName}`);
+        const jpInput = editForm.querySelector('.jp-input');
+        const enInput = editForm.querySelector('.en-input');
+
+        if (!jpInput.value.trim() || !enInput.value.trim()) return;
+
+        const newItem = {
+            jp: jpInput.value.trim(),
+            en: enInput.value.trim(),
+            v: enInput.value.trim().toLowerCase()
+        };
+
+        categories[catName].push(newItem);
+        jpInput.value = '';
+        enInput.value = '';
+        saveToLocalStorage();
+        renderCategories();
+    }
+
+    function deleteItem(catName, index) {
+        categories[catName].splice(index, 1);
+        saveToLocalStorage();
+        renderCategories();
+    }
+
+    function setAspectRatio(ratio) {
+        selectedAspectRatio = ratio;
+        document.querySelectorAll('.aspect-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.ratio === ratio) {
+                btn.classList.add('active');
+            }
+        });
+        updateOutput();
+    }
+
+    function setResolution(res) {
+        selectedResolution = res;
+        document.querySelectorAll('.resolution-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.textContent.includes(res)) {
+                btn.classList.add('active');
+            }
+        });
+        updateOutput();
+    }
+
+    function renderParamPresets() {
+        const container = document.getElementById('param-presets');
+        container.innerHTML = '';
+
+        stylePresets.forEach(style => {
+            const btn = document.createElement('button');
+            btn.className = 'btn btn-outline btn-sm';
+            btn.textContent = style;
+            btn.onclick = () => {
+                selectedStyle = selectedStyle === style ? "" : style;
+                renderParamPresets();
+                updateOutput();
+            };
+            if (selectedStyle === style) {
+                btn.classList.remove('btn-outline');
+                btn.classList.add('btn-primary');
+            }
+            container.appendChild(btn);
+        });
+    }
+
+    function toggleParamEditMode() {
+        const editForm = document.getElementById('param-edit-form');
+        editForm.classList.toggle('active');
+    }
+
+    function addParamPreset() {
+        const input = document.getElementById('new-param-val');
+        if (!input.value.trim()) return;
+
+        const style = input.value.trim();
+        if (!stylePresets.includes(style)) {
+            stylePresets.push(style);
+        }
+        input.value = '';
+        saveToLocalStorage();
+        renderParamPresets();
+    }
+
+    function updateOutput() {
+        let prompt = Array.from(selected).join(", ");
+
+        if (selectedStyle) {
+            prompt = prompt ? `${prompt}, ${selectedStyle}` : selectedStyle;
+        }
+
+        document.getElementById('output').value = prompt;
+        document.getElementById('charCount').textContent = prompt.length;
+        document.getElementById('selectedCount').textContent = selected.size + (selectedStyle ? 1 : 0);
+    }
+
+    function clearSelection() {
+        selected.clear();
+        selectedStyle = "";
+        document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.btn-primary').forEach(btn => {
+            if (btn.textContent && stylePresets.includes(btn.textContent)) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline');
+            }
+        });
+        updateOutput();
+        saveToLocalStorage();
+    }
+
+    function saveSet() {
+        const setName = document.getElementById('setName').value.trim();
+        if (!setName) {
+            alert('セット名を入力してください');
+            return;
+        }
+
+        sets[setName] = {
+            selected: Array.from(selected),
+            style: selectedStyle,
+            aspectRatio: selectedAspectRatio,
+            resolution: selectedResolution
+        };
+
+        document.getElementById('setName').value = '';
+        saveToLocalStorage();
+        renderSetList();
+    }
+
+    function loadSet(setName) {
+        const set = sets[setName];
+        if (!set) return;
+
+        selected.clear();
+        set.selected.forEach(item => selected.add(item));
+        selectedStyle = set.style || "";
+        selectedAspectRatio = set.aspectRatio || "1:1";
+        selectedResolution = set.resolution || "1k";
+
+        renderCategories();
+        renderParamPresets();
+        setAspectRatio(selectedAspectRatio);
+        setResolution(selectedResolution);
+        updateOutput();
+    }
+
+    function deleteSet(setName) {
+        delete sets[setName];
+        saveToLocalStorage();
+        renderSetList();
+    }
+
+    function renderSetList() {
+        const container = document.getElementById('setList');
+        container.innerHTML = '';
+
+        Object.keys(sets).forEach(setName => {
+            const container_item = document.createElement('div');
+            container_item.className = 'set-btn-container';
+            container_item.innerHTML = `
+                <button class="btn btn-outline btn-sm" onclick="loadSet('${setName}')">${setName}</button>
+                <button class="btn btn-danger btn-sm" onclick="deleteSet('${setName}')">削除</button>
+            `;
+            container.appendChild(container_item);
+        });
+    }
+
+    function copyToClipboard() {
+        const output = document.getElementById('output');
+        output.select();
+        document.execCommand('copy');
+        
+        const toast = document.getElementById('copyToast');
+        toast.style.display = 'block';
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 2000);
+    }
+
+    function exportData() {
+        const data = {
+            categories,
+            sets,
+            stylePresets,
+            selectedAspectRatio,
+            selectedResolution
+        };
+        const json = JSON.stringify(data, null, 2);
+        const blob = new Blob([json], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'grok-prompt-data.json';
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                categories = data.categories || defaultCategories;
+                sets = data.sets || {};
+                stylePresets = data.stylePresets || defaultStyles;
+                selectedAspectRatio = data.selectedAspectRatio || "1:1";
+                selectedResolution = data.selectedResolution || "1k";
+                saveToLocalStorage();
+                init();
+            } catch (err) {
+                alert('ファイルの読み込みに失敗しました');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    function resetToDefault() {
+        if (confirm('本当に初期状態に戻しますか？')) {
+            localStorage.removeItem('grok_categories');
+            localStorage.removeItem('grok_sets');
+            localStorage.removeItem('grok_styles');
+            categories = JSON.parse(JSON.stringify(defaultCategories));
+            sets = {};
+            stylePresets = JSON.parse(JSON.stringify(defaultStyles));
+            selected.clear();
+            selectedStyle = "";
+            selectedAspectRatio = "1:1";
+            selectedResolution = "1k";
+            saveToLocalStorage();
+            init();
+        }
+    }
+
+    function saveToLocalStorage() {
+        localStorage.setItem('grok_categories', JSON.stringify(categories));
+        localStorage.setItem('grok_sets', JSON.stringify(sets));
+        localStorage.setItem('grok_styles', JSON.stringify(stylePresets));
+    }
+
+    // 初期化
+    init();
+</script>
+
+</body>
+</html>
